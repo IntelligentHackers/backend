@@ -172,3 +172,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+*.pem
+*.key
+aes_key.txt
+
+settings.py
+test.py
+config.py
+uploads
