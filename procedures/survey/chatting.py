@@ -19,12 +19,15 @@ async def finalize_output(id: str):
         'role': 'developer',
         'content': finalize_conversation()
     })
+    for prompt in prompts:
+        if 'time' in prompt:
+            del prompt['time']
     result = client.beta.chat.completions.parse(
         model='gpt-4o',
         messages=prompts,
         response_format=UserSurveyResult
     )
-    info = result.choices[0].message.parsed
+    info = result.choices[0].message.parsed.model_dump_json()
     await db.registrations.update_one(
         {'_id': validate_object_id(id)},
         {'$set': {
@@ -68,11 +71,11 @@ async def initiate_conversation(lang: str, email: str, ip: str):
             'conversations': {
                 'time': datetime.now(),
                 'role': 'assistant',
-                'message': response
+                'content': response
             }
         }}
     )
-    return response
+    return response, str(inserted_result.inserted_id)
 
 
 async def develop_conversation(id: str, message: str):
@@ -94,10 +97,13 @@ async def develop_conversation(id: str, message: str):
             'conversations': {
                 'time': datetime.now(),
                 'role': 'user',
-                'message': message
+                'content': message
             }
         }}
     )
+    for message in prompts:
+        if 'time' in message:
+            del message['time']
     result = client.chat.completions.create(
         model='gpt-4o',
         messages=prompts
@@ -109,7 +115,7 @@ async def develop_conversation(id: str, message: str):
             'conversations': {
                 'time': datetime.now(),
                 'role': 'assistant',
-                'message': response
+                'content': response
             }
         }}
     )

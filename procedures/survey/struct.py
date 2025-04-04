@@ -5,7 +5,7 @@ from typings.user import UserGender
 
 class UserSurveyResult(BaseModel):
     username: str
-    birth: date
+    birth: str
     bio: str
     tags: list[str]
     gender: UserGender

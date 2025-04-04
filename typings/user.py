@@ -15,7 +15,7 @@ class UserLogin(BaseModel):
     credential: str
 
 
-class UserRole(BaseModel):
+class UserRole(str, Enum):
     young = "young"
     old = "old"
 

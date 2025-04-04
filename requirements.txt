@@ -7,7 +7,6 @@ backports.weakref==1.0.post1
 bcrypt==4.1.2
 bidict==0.23.1
 certifi==2024.7.4
-clyent==1.2.2
 dnspython==2.6.1
 docopt==0.6.2
 ecdsa==0.19.0
