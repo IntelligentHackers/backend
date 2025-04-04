@@ -10,7 +10,7 @@ class UserSurveyResult(BaseModel):
     tags: list[str]
     gender: UserGender
 
+
 class UserSurveyDialogs(BaseModel):
     time: datetime
     username: str
-

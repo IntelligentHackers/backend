@@ -3,6 +3,7 @@ import torch
 from bson import ObjectId
 from pydantic import BaseModel
 
+
 class SelectionResult(str, Enum):
     approved = "approved"
     rejected = "rejected"
@@ -14,6 +15,7 @@ class SelectionResult(str, Enum):
         else:
             award = 0
         return torch.tensor([[award]], dtype=torch.float32)
+
 
 class Selection(BaseModel):
     _id: ObjectId

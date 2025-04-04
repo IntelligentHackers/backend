@@ -3,7 +3,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pymongo.errors import OperationFailure
 from routers import (
-    users_router, sessions_router, selections_router,
+    users_router,
+    sessions_router,
+    selections_router,
 )
 from database import close_mongo_connection, connect_to_mongo
 import socketio
@@ -17,13 +19,19 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://v4.gensync.site", "https://v4-netlify.gensync.site", "https://deploy-preview-64--gensync.netlify.app"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://v4.gensync.site",
+        "https://v4-netlify.gensync.site",
+        "https://deploy-preview-64--gensync.netlify.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.mount("/socket.io", socket)
+
 
 @sio.event
 async def connect(sid, environ):
@@ -38,7 +46,7 @@ async def disconnect(sid):
 async def mark_all_tasks_failed():
     await db.gensync.tasks.update_many(
         {"status": {"$ne": "completed"}},
-        {"$set": {"status": "failed", "errmsg": "Program interrupted unexpectedly"}}
+        {"$set": {"status": "failed", "errmsg": "Program interrupted unexpectedly"}},
     )
 
 
@@ -49,7 +57,10 @@ app.add_event_handler("shutdown", close_mongo_connection)
 # Register routes
 app.include_router(users_router.router, prefix="/api/users", tags=["users"])
 app.include_router(sessions_router.router, prefix="/api/sessions", tags=["sessions"])
-app.include_router(selections_router.router, prefix="/api/selections", tags=["selections"])
+app.include_router(
+    selections_router.router, prefix="/api/selections", tags=["selections"]
+)
+
 
 @app.router.get("/api/")
 async def home():
@@ -63,6 +74,7 @@ async def get_cert():
         "code": 200,
         "data": open("./rsa_public_key.pem", "r").read(),
     }
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(_: Request, exc: RequestValidationError):
@@ -86,12 +98,12 @@ async def generic_exception_handler():
         content={"detail": "An internal server error occurred"}, status_code=500
     )
 
+
 @app.exception_handler(OperationFailure)
 async def operation_failure_exception_handler(_: Request, exc: OperationFailure):
     """Catch-all exception handler to return a generic error message."""
-    return JSONResponse(
-        content={"detail": exc.details['errmsg']}, status_code=400
-    )
+    return JSONResponse(content={"detail": exc.details["errmsg"]}, status_code=400)
+
 
 @app.get("/api/version")
 async def get_version():

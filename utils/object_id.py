@@ -20,12 +20,14 @@ def validate_object_id(id: str):
         raise HTTPException(status_code=400, detail="Invalid Object ID")
     return _id
 
+
 def string_to_optional_object_id(id: str):
-    try :
+    try:
         _id = ObjectId(id)
     except:
         return None
     return _id
+
 
 async def get_user(oid: str):
     """
@@ -37,15 +39,19 @@ async def get_user(oid: str):
     print(user)
     return None
 
+
 async def optional_current_user(token: str = Depends(oauth2_scheme)):
     result = await get_current_user(token, False)
     return result
 
 
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme), exception: bool = True):
+async def get_current_user(
+    token: Optional[str] = Depends(oauth2_scheme), exception: bool = True
+):
     """
     Inject `Depends`, returning user info
     """
+
     def raise_exception():
         if exception:
             raise HTTPException(

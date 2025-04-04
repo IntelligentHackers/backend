@@ -11,14 +11,10 @@ class MatchingModel(nn.Module):
         super(MatchingModel, self).__init__()
         self.user_embedding = nn.Embedding(vocab_size, embed_dim)
         self.age_mlp = nn.Sequential(
-            nn.Linear(1, 16),
-            nn.GELU(),
-            nn.Linear(16, embed_dim)
+            nn.Linear(1, 16), nn.GELU(), nn.Linear(16, embed_dim)
         )
         self.final_mlp = nn.Sequential(
-            nn.Linear(embed_dim * 2, 64),
-            nn.GELU(),
-            nn.Linear(64, 1)
+            nn.Linear(embed_dim * 2, 64), nn.GELU(), nn.Linear(64, 1)
         )
 
     def forward(self, hobbies_ids, age_tensor):
@@ -41,4 +37,3 @@ class MatchingModel(nn.Module):
         # Get the matching score
         score = self.final_mlp(combined)
         return score
-

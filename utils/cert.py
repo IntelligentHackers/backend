@@ -22,7 +22,7 @@ def hash_password(password):
 
 
 def check_password(password: str, hashed: str):
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
 public_key = RSA.import_key(open("rsa_public_key.pem", "rb").read())
@@ -42,14 +42,8 @@ def rsa_decrypt(ciphertext):
     return decrypt_text.decode("utf8")
 
 
-def jwt_encode(
-    id: str,
-    email: str,
-    role: UserRole
-):
-    duration = (
-        datetime.timedelta(days=30)
-    )
+def jwt_encode(id: str, email: str, role: UserRole):
+    duration = datetime.timedelta(days=30)
     payload = {
         "iss": "gensync",
         "exp": datetime.datetime.now(datetime.timezone.utc) + duration,
@@ -92,7 +86,7 @@ async def validate_by_cert(email: str, cert: str):
     if checkpw(
         bytes(auth_field["password"], "utf-8"), bytes(user["password"], "utf-8")
     ):
-        return jwt_encode(str(found['_id']), email, user["role"])
+        return jwt_encode(str(found["_id"]), email, user["role"])
     else:
         raise HTTPException(status_code=403, detail="Password incorrect")
 

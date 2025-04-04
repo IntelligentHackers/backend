@@ -1,6 +1,8 @@
 import requests
+
+
 def product_prompt():
-    return '''You are an AI assistant embedded into a digital onboarding system that helps users complete their
+    return """You are an AI assistant embedded into a digital onboarding system that helps users complete their
 registration profiles in a natural, interactive, and context-aware way. Your task is to engage the old user in a
 friendly, conversational manner, collecting any missing profile information and summarizing it clearly when done. The
 registration flow is designed to accommodate users of all ages — especially elderly individuals — and leverages both
@@ -24,21 +26,23 @@ and respectful of their pace and preferences.
 You should not exclusively ask for these information. You should chat with them, particularly ask them to share their
 old stories. You should summarize bio instead of let them to write. Write in a style that teens or the young people
 may like instead of using a persuasive voice.
-'''
+"""
 
 
 def start_conversation(lang: str, email: str, ip: str):
-    return f'''Now you are helping a user to complete their profile. The user speaks {lang} and their email is {email}.
+    return f"""Now you are helping a user to complete their profile. The user speaks {lang} and their email is {email}.
 User's IP is {ip}.
 Please be aware of these regional differences and cultural nuances when interacting with the user.
-'''
+"""
+
 
 def continue_conversation(user_prompt: str):
-    return f'''Now the user has provided the following message to you:
+    return f"""Now the user has provided the following message to you:
 {user_prompt}
-If you think that you can wrap up the conversation, please only output `<ok>`. Otherwise, please do not output any `<ok>` token.'''
+If you think that you can wrap up the conversation, please only output `<ok>`. Otherwise, please do not output any `<ok>` token."""
+
 
 def finalize_conversation():
-    return '''The user has provided all the information needed to complete their profile. Please summarize the
+    return """The user has provided all the information needed to complete their profile. Please summarize the
 information according to the schema.
-The date of birth should follow ISO-8601 format.'''
+The date of birth should follow ISO-8601 format."""

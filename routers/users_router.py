@@ -48,15 +48,14 @@ async def create_user(user: CreateUser):
     auth = Auth(
         _id=ObjectId(),
         email=user.email,
-        password_hash=hashpw(auth_field['password'].encode('utf-8'), gensalt()),
+        password_hash=hashpw(auth_field["password"].encode("utf-8"), gensalt()),
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
     user_auth = auth.model_dump()
-    del user_auth['_id']
+    del user_auth["_id"]
     result = await db.auths.insert_one(user_auth)
     return str(result.inserted_id)
-
 
 
 class AuthUser(BaseModel):
@@ -76,6 +75,7 @@ async def auth_user(auth: AuthUser):
         "_id": id,
     }
 
+
 @router.post("/{user_id}/avatar")
 async def upload_avatar(user_id: str, file: UploadFile = File(...)):
     contents = await file.read()
@@ -89,17 +89,21 @@ async def upload_avatar(user_id: str, file: UploadFile = File(...)):
     await db.users.update_one(
         {"_id": validate_object_id(user_id)},
         {"$set": {"avatar": contents, "format": image_format}},
-        upsert=True
+        upsert=True,
     )
 
     return JSONResponse(content={"message": "Avatar uploaded successfully."})
 
 
 @router.get("/{user_id}/sessions")
-async def get_user_sessions(user_id: str, page: int, per_page: int, search: str, user=Depends(get_current_user)):
-    if user['id'] != user_id:
+async def get_user_sessions(
+    user_id: str, page: int, per_page: int, search: str, user=Depends(get_current_user)
+):
+    if user["id"] != user_id:
         raise HTTPException(status_code=403, detail="Forbidden")
-    count = await db.sessions.count_documents({"participants": validate_object_id(user_id)})
+    count = await db.sessions.count_documents(
+        {"participants": validate_object_id(user_id)}
+    )
     pipeline = [
         {
             "$match": {
@@ -132,23 +136,17 @@ async def get_user_sessions(user_id: str, page: int, per_page: int, search: str,
                 "title": 1,
             }
         },
-        {
-            "$sort": {
-                "last.time": -1
-            }
-        },
-        {
-            "$skip": page * per_page
-        },
-        {
-            "$limit": per_page
-        }
+        {"$sort": {"last.time": -1}},
+        {"$skip": page * per_page},
+        {"$limit": per_page},
     ]
     sessions = await db.sessions.aggregate(pipeline).to_list(length=None)
     for session in sessions:
-        session['participants_info'] = [p['email'] for p in session['participants_info']]
-        if session['last']:
-            session['last']['sender'] = str(session['last']['sender'])
+        session["participants_info"] = [
+            p["email"] for p in session["participants_info"]
+        ]
+        if session["last"]:
+            session["last"]["sender"] = str(session["last"]["sender"])
 
     return {
         "sessions": sessions,

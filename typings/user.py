@@ -3,6 +3,7 @@ from enum import Enum
 from bson import ObjectId
 from pydantic import BaseModel
 
+
 class UserGender(str, Enum):
     male = "male"
     female = "female"
@@ -25,7 +26,7 @@ class User(BaseModel):
     auth_id: str
     username: str
     gender: UserGender
-    birth: date # ISO-8601
+    birth: date  # ISO-8601
     avatar: bytes
     role: UserRole
     email: str
@@ -35,11 +36,15 @@ class User(BaseModel):
     tags: list[str]
     activated: bool
 
-
     # Get the attribute of age.
     @property
     def age(self) -> int:
         from datetime import datetime
+
         birth_date = self.birth
         today = datetime.today()
-        return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        return (
+            today.year
+            - birth_date.year
+            - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        )

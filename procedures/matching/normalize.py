@@ -9,18 +9,23 @@ class NormalizedUserSurveyResult(UserSurveyResult):
     @property
     def age_(self):
         from datetime import date
+
         today = date.today()
-        age = today.year - self.birth.year - ((today.month, today.day) < (self.birth.month, self.birth.day))
+        age = (
+            today.year
+            - self.birth.year
+            - ((today.month, today.day) < (self.birth.month, self.birth.day))
+        )
         normalized = (age - 10) / 90
         return torch.tensor([[normalized]], dtype=torch.float32)
 
     @property
     def gender_(self):
         mapping = {
-            'male': 1,
-            'female': 2,
-            'nonbinary': 3,
-            'unknown': 4,
+            "male": 1,
+            "female": 2,
+            "nonbinary": 3,
+            "unknown": 4,
         }
         gender = mapping[self.gender]
         return torch.tensor([gender], dtype=torch.long).unsqueeze(0)
@@ -38,9 +43,11 @@ class NormalizedUserSurveyResult(UserSurveyResult):
         """
         It should be perfectly concat with items above.
         """
-        return torch.cat([
-            self.age_,
-            self.gender_,
-            self.tags_,
-            self.bio_,
-        ])
+        return torch.cat(
+            [
+                self.age_,
+                self.gender_,
+                self.tags_,
+                self.bio_,
+            ]
+        )

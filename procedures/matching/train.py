@@ -5,7 +5,9 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-from procedures.matching.model import MatchingModel  # ensure this model outputs num_actions Q-values
+from procedures.matching.model import (
+    MatchingModel,
+)  # ensure this model outputs num_actions Q-values
 
 
 # Dummy environment for demonstration purposes
@@ -73,18 +75,24 @@ steps_done = 0
 def select_action(state):
     """Epsilon-greedy action selection."""
     global steps_done
-    epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(-1. * steps_done / epsilon_decay)
+    epsilon = epsilon_end + (epsilon_start - epsilon_end) * math.exp(
+        -1.0 * steps_done / epsilon_decay
+    )
     steps_done += 1
     if random.random() < epsilon:
         # Random action
-        return torch.tensor([[random.randrange(num_actions)]], device=device, dtype=torch.long)
+        return torch.tensor(
+            [[random.randrange(num_actions)]], device=device, dtype=torch.long
+        )
     else:
         # State is a tuple: (hobbies_ids, age_tensor)
         hobbies_ids, age_tensor = state
         hobbies_ids = hobbies_ids.to(device)
         age_tensor = age_tensor.to(device)
         with torch.no_grad():
-            q_values = policy_net(hobbies_ids, age_tensor)  # expect shape [batch, num_actions]
+            q_values = policy_net(
+                hobbies_ids, age_tensor
+            )  # expect shape [batch, num_actions]
             return q_values.argmax(dim=1).view(1, 1)
 
 
@@ -93,25 +101,42 @@ def optimize_model():
         return
     transitions = memory.sample(batch_size)
     # Unpack the batch of transitions
-    batch_state, batch_action, batch_reward, batch_next_state, batch_done = zip(*transitions)
+    batch_state, batch_action, batch_reward, batch_next_state, batch_done = zip(
+        *transitions
+    )
 
     # Process states: each state is a tuple (hobbies_ids, age_tensor)
-    batch_hobbies_ids = torch.cat([s[0] for s in batch_state]).to(device)  # shape: [batch, seq_len]
+    batch_hobbies_ids = torch.cat([s[0] for s in batch_state]).to(
+        device
+    )  # shape: [batch, seq_len]
     batch_age = torch.cat([s[1] for s in batch_state]).to(device)  # shape: [batch, 1]
     batch_action = torch.cat(batch_action).to(device)  # shape: [batch, 1]
-    batch_reward = torch.tensor(batch_reward, dtype=torch.float32, device=device).unsqueeze(1)
-    batch_done = torch.tensor(batch_done, dtype=torch.float32, device=device).unsqueeze(1)
+    batch_reward = torch.tensor(
+        batch_reward, dtype=torch.float32, device=device
+    ).unsqueeze(1)
+    batch_done = torch.tensor(batch_done, dtype=torch.float32, device=device).unsqueeze(
+        1
+    )
 
     # Process next states
     batch_next_hobbies_ids = torch.cat([s[0] for s in batch_next_state]).to(device)
     batch_next_age = torch.cat([s[1] for s in batch_next_state]).to(device)
 
     # Compute current Q-values: Q(s, a) using policy_net
-    state_action_values = policy_net(batch_hobbies_ids, batch_age).gather(1, batch_action)
+    state_action_values = policy_net(batch_hobbies_ids, batch_age).gather(
+        1, batch_action
+    )
 
     # Compute next Q-values using target network and calculate expected Q-values
-    next_q_values = target_net(batch_next_hobbies_ids, batch_next_age).max(1)[0].detach().unsqueeze(1)
-    expected_state_action_values = batch_reward + gamma * next_q_values * (1 - batch_done)
+    next_q_values = (
+        target_net(batch_next_hobbies_ids, batch_next_age)
+        .max(1)[0]
+        .detach()
+        .unsqueeze(1)
+    )
+    expected_state_action_values = batch_reward + gamma * next_q_values * (
+        1 - batch_done
+    )
 
     # Compute loss (Mean Squared Error)
     loss = F.mse_loss(state_action_values, expected_state_action_values)
