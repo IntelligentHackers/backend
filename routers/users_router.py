@@ -1,22 +1,156 @@
-from fastapi import APIRouter
+import json
+from datetime import datetime
+from io import BytesIO
+from PIL import Image
+from bcrypt import hashpw, gensalt
+from bson import ObjectId
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from utils.cert import validate_by_cert
+from utils.cert import validate_by_cert, rsa_decrypt
+from typings.auth import Auth
+from database import db
+from utils.object_id import validate_object_id, get_current_user
+
+MAX_FILE_SIZE = 1 * 1024 * 1024  # 1MB
+ALLOWED_FORMATS = {"jpeg", "png"}
+
+
+def validate_image(file: bytes) -> str:
+    try:
+        img = Image.open(BytesIO(file))
+        image_format = img.format.lower()
+        if image_format not in ALLOWED_FORMATS:
+            raise ValueError("Unsupported file format.")
+        return image_format
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid image file.")
+
+
 router = APIRouter()
 
 
+class CreateUser(BaseModel):
+    email: str
+    credential: str
+
+
+@router.post("")
+async def create_user(user: CreateUser):
+    auth_field = json.loads(rsa_decrypt(user.credential))
+    time = auth_field["time"]
+    # in a minute
+    if time < datetime.now().timestamp() - 60:
+        raise HTTPException(status_code=400, detail="Request expired")
+    # Check if email already exists
+    if await db.auths.count_documents({"email": user.email}) > 0:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    auth = Auth(
+        _id=ObjectId(),
+        email=user.email,
+        password_hash=hashpw(auth_field['password'].encode('utf-8'), gensalt()),
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    user_auth = auth.model_dump()
+    del user_auth['_id']
+    result = await db.auths.insert_one(user_auth)
+    return str(result.inserted_id)
+
+
+
 class AuthUser(BaseModel):
-    id: str
+    email: str
     credential: str
 
 
 @router.post("/auth")
 async def auth_user(auth: AuthUser):
-    id = auth.id
+    email = auth.email
     credential = auth.credential
 
-    result = await validate_by_cert(id, credential)
+    result = await validate_by_cert(email, credential)
 
     return {
         "token": result,
         "_id": id,
+    }
+
+@router.post("/{user_id}/avatar")
+async def upload_avatar(user_id: str, file: UploadFile = File(...)):
+    contents = await file.read()
+
+    # Check file size
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File too large. Max 1MB.")
+
+    image_format = validate_image(contents)
+
+    await db.users.update_one(
+        {"_id": validate_object_id(user_id)},
+        {"$set": {"avatar": contents, "format": image_format}},
+        upsert=True
+    )
+
+    return JSONResponse(content={"message": "Avatar uploaded successfully."})
+
+
+@router.get("/{user_id}/sessions")
+async def get_user_sessions(user_id: str, page: int, per_page: int, search: str, user=Depends(get_current_user)):
+    if user['id'] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    count = await db.sessions.count_documents({"participants": validate_object_id(user_id)})
+    pipeline = [
+        {
+            "$match": {
+                "participants": validate_object_id(user_id),
+                "$or": [
+                    {"title": {"$regex": search, "$options": "i"}},
+                    {"last.message": {"$regex": search, "$options": "i"}},
+                ],
+            }
+        },
+        {
+            "$lookup": {
+                "from": "users",
+                "localField": "participants",
+                "foreignField": "_id",
+                "as": "participants_info",
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$participants_info",
+                "preserveNullAndEmptyArrays": True,
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "participants_info.email": 1,
+                "last": 1,
+                "title": 1,
+            }
+        },
+        {
+            "$sort": {
+                "last.time": -1
+            }
+        },
+        {
+            "$skip": page * per_page
+        },
+        {
+            "$limit": per_page
+        }
+    ]
+    sessions = await db.sessions.aggregate(pipeline).to_list(length=None)
+    for session in sessions:
+        session['participants_info'] = [p['email'] for p in session['participants_info']]
+        if session['last']:
+            session['last']['sender'] = str(session['last']['sender'])
+
+    return {
+        "sessions": sessions,
+        "total": count,
     }

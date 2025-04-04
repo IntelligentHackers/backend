@@ -2,9 +2,8 @@ from fastapi import Request, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pymongo.errors import OperationFailure
-
 from routers import (
-    users_router,
+    users_router, sessions_router, selections_router,
 )
 from database import close_mongo_connection, connect_to_mongo
 import socketio
@@ -49,24 +48,12 @@ app.add_event_handler("shutdown", close_mongo_connection)
 
 # Register routes
 app.include_router(users_router.router, prefix="/api/users", tags=["users"])
+app.include_router(sessions_router.router, prefix="/api/sessions", tags=["sessions"])
+app.include_router(selections_router.router, prefix="/api/selections", tags=["selections"])
 
 @app.router.get("/api/")
 async def home():
-    return {"status": "ok", "code": 200, "data": {
-        "message": "Welcome to gensync API",
-        "version": "0.1.0-alpha.1",
-        "author": "ZZDev",
-        "license": "MIT",
-        "source": "https://github.com/gensync/gensync4-backend-python.git",
-        "apis": {
-            "user": "/api/users",
-            "activity": "/api/activities",
-            "group": "/api/groups",
-            "exports": "/api/exports",
-            "imports": "/api/imports",
-            "logs": "/api/logs"
-        }
-    }}
+    return {}
 
 
 @app.get("/api/cert")

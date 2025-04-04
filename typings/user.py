@@ -22,6 +22,7 @@ class UserRole(str, Enum):
 
 class User(BaseModel):
     _id: ObjectId
+    auth_id: str
     username: str
     gender: UserGender
     birth: date # ISO-8601
@@ -32,6 +33,7 @@ class User(BaseModel):
     updated_at: datetime = datetime.now()
     bio: str
     tags: list[str]
+    activated: bool
 
 
     # Get the attribute of age.

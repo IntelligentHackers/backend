@@ -9,7 +9,9 @@ class DataBase:
     gensync: AsyncIOMotorDatabase = None   # type: ignore
     registrations: AgnosticCollection = None
     users: AgnosticCollection = None
-    conversations: AgnosticCollection = None
+    sessions: AgnosticCollection = None
+    selections: AgnosticCollection = None
+    messages: AgnosticCollection = None
     auths: AgnosticCollection = None
 
 
@@ -25,8 +27,10 @@ async def connect_to_mongo():
     db.gensync = db.client.get_database('gensync')
     db.registrations = db.gensync.get_collection('registrations')
     db.users = db.gensync.get_collection('users')
-    db.conversations = db.gensync.get_collection('conversations')
+    db.messages = db.gensync.get_collection('messages')
     db.auths = db.gensync.get_collection('auths')
+    db.sessions = db.gensync.get_collection('sessions')
+    db.selections = db.gensync.get_collection('selections')
     logging.info("connected to gensync...")
 
 

@@ -44,6 +44,7 @@ def rsa_decrypt(ciphertext):
 
 def jwt_encode(
     id: str,
+    email: str,
     role: UserRole
 ):
     duration = (
@@ -56,6 +57,7 @@ def jwt_encode(
         "sub": id,
         "scope": "access_token",
         "role": role,
+        "mail": email,
         "jti": str(ObjectId()),
     }
     result = jwt.encode(payload, jwt_private_key, algorithm="HS256")
@@ -70,27 +72,27 @@ async def get_renewed_password(id: str, credential: str):
     field = json.loads(rsa_decrypt(credential))
     time = field["time"]
     if time < datetime.datetime.now().timestamp() - 60:
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="Login expired")
     new_password = hashpw(bytes(field["password"], "utf-8"), gensalt())
     await db.gensync.users.update_one(
         {"_id": ObjectId(id)}, {"$set": {"password": new_password}}
     )
 
 
-async def validate_by_cert(id: str, cert: str):
+async def validate_by_cert(email: str, cert: str):
     auth_field = json.loads(rsa_decrypt(cert))
     time = auth_field["time"]
     # in a minute
     if time < datetime.datetime.now().timestamp() - 60:
-        raise HTTPException(status_code=401, detail="Token expired")
-    found = await db.gensync.users.find({"_id": ObjectId(id)}).to_list(None)
+        raise HTTPException(status_code=401, detail="Login expired")
+    found = await db.gensync.users.find({"email": email}).to_list(None)
     if len(found) == 0:
         raise HTTPException(status_code=404, detail="User not found")
     user = found[0]
     if checkpw(
         bytes(auth_field["password"], "utf-8"), bytes(user["password"], "utf-8")
     ):
-        return jwt_encode(id, user["role"])
+        return jwt_encode(str(found['_id']), email, user["role"])
     else:
         raise HTTPException(status_code=403, detail="Password incorrect")
 

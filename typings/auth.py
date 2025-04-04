@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class Auth(BaseModel):
     _id: ObjectId
-    user_id: ObjectId
+    email: str
     password_hash: bytes # Only if password login
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
