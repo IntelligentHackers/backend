@@ -60,6 +60,5 @@ async def get_selection_data(batch_size=batch_size):
         ).vector
         res = SelectionResult(sample["result"]).award.item()  # Convert tensor to float
         result.append((res, subject_user, object_user))
-        print(subject_user.shape, object_user.shape)
 
     return result

@@ -34,9 +34,9 @@ def train_dqn(model: nn.Module, transitions):
     batch = random.sample(transitions, batch_size)
     rewards, inputs, outputs = zip(*batch)
 
-    inputs = torch.stack([torch.tensor(i, dtype=torch.float32) for i in inputs])  # shape: [B, embed_dim]
-    outputs = torch.stack([torch.tensor(o, dtype=torch.float32) for o in outputs])  # shape: [B, embed_dim]
-    rewards = torch.tensor(rewards, dtype=torch.float32)  # shape: [B]
+    inputs = torch.stack([torch.tensor(i, dtype=torch.float32) for i in inputs]).squeeze(-1).to(device=device)  # shape: [B, embed_dim]
+    outputs = torch.stack([torch.tensor(o, dtype=torch.float32) for o in outputs]).squeeze(-1).to(device=device)  # shape: [B, embed_dim]
+    rewards = torch.tensor(rewards, dtype=torch.float32).to(device=device)  # shape: [B]
 
     # Forward pass
     q_inputs = model(inputs)  # [B, embed_dim]

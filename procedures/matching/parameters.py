@@ -1,5 +1,5 @@
 num_episodes = 200
-batch_size = 16
+batch_size = 4
 gamma = 0.99
 learning_rate = 1e-4
 target_update = 10
