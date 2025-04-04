@@ -1,6 +1,3 @@
-import requests
-
-
 def product_prompt():
     return """You are an AI assistant embedded into a digital onboarding system that helps users complete their
 registration profiles in a natural, interactive, and context-aware way. Your task is to engage the old user in a

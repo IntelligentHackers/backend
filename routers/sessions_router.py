@@ -1,16 +1,6 @@
-import json
-from datetime import datetime
-from io import BytesIO
-from PIL import Image
-from bcrypt import hashpw, gensalt
-from bson import ObjectId
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from utils.cert import validate_by_cert, rsa_decrypt
-from typings.auth import Auth
+from fastapi import APIRouter, Depends
 from database import db
-from utils.object_id import validate_object_id, get_current_user
+from utils.object_id import get_current_user
 
 router = APIRouter()
 

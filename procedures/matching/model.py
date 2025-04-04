@@ -1,10 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import math
-import random
-from collections import deque
-
 
 class MatchingModel(nn.Module):
     def __init__(self, vocab_size: int, embed_dim: int):

@@ -24,7 +24,7 @@ def validate_object_id(id: str):
 def string_to_optional_object_id(id: str):
     try:
         _id = ObjectId(id)
-    except:
+    except TypeError or ValueError:
         return None
     return _id
 

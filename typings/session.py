@@ -1,6 +1,4 @@
-from enum import Enum
 from typing import Optional
-import torch
 from bson import ObjectId
 from pydantic import BaseModel
 from datetime import datetime

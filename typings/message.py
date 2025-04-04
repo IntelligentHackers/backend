@@ -1,5 +1,3 @@
-from enum import Enum
-import torch
 from bson import ObjectId
 from pydantic import BaseModel
 from datetime import datetime
