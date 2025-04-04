@@ -22,3 +22,4 @@ class Selection(BaseModel):
     subject: str
     object: str
     result: SelectionResult
+    trained: bool

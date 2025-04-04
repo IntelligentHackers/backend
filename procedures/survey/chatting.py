@@ -25,7 +25,7 @@ async def finalize_output(id: str):
     result = client.beta.chat.completions.parse(
         model="gpt-4o", messages=prompts, response_format=UserSurveyResult
     )
-    info = result.choices[0].message.parsed.model_dump_json()
+    info = result.choices[0].message.parsed.model_dump()
     await db.registrations.update_one(
         {"_id": validate_object_id(id)},
         {"$set": {"status": "completed", "result": info}},

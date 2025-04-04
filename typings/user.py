@@ -1,5 +1,7 @@
 from datetime import date, datetime
 from enum import Enum
+from typing import Optional
+
 from bson import ObjectId
 from pydantic import BaseModel
 
@@ -27,7 +29,7 @@ class User(BaseModel):
     username: str
     gender: UserGender
     birth: date  # ISO-8601
-    avatar: bytes
+    avatar: Optional[bytes] = None
     role: UserRole
     email: str
     created_at: datetime = datetime.now()

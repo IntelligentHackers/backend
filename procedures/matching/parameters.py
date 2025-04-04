@@ -1,0 +1,13 @@
+num_episodes = 200
+batch_size = 16
+gamma = 0.99
+learning_rate = 1e-4
+target_update = 10
+epsilon_start = 1.0
+epsilon_end = 0.1
+epsilon_decay = 200  # controls rate of decay
+num_actions = 2  # e.g., 0: no match, 1: match
+bio_token = 64
+tag_token = 32
+embed_dim = bio_token + tag_token + 2
+positive_sample_ratio = 0.3  # Ratio of positive samples in the batch

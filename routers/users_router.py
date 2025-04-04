@@ -1,4 +1,5 @@
 import json
+import random
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
@@ -152,3 +153,27 @@ async def get_user_sessions(
         "sessions": sessions,
         "total": count,
     }
+
+
+@router.get("")
+async def recommend_user(
+    user=Depends(get_current_user), page: int = 1, per_page: int = 1
+):
+    """
+    This function should return recommended users based on some criteria.
+    But the model is under training yet, We should randomly select.
+    """
+    if page < 1:
+        raise HTTPException(status_code=400, detail="Page must be greater than 0")
+
+    fetched = await db.users.find({}).to_list(length=None)
+
+    result = random.choice(fetched)
+
+    while str(result["_id"]) == user["id"]:
+        # Ensure we don't recommend the current user
+        result = random.choice(fetched)
+
+    result["_id"] = str(result["_id"])
+
+    return result

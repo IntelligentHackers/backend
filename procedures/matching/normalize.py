@@ -12,7 +12,13 @@ class NormalizedUserSurveyResult(UserSurveyResult):
         age = (
             today.year
             - datetime.fromisoformat(self.birth).year
-            - ((today.month, today.day) < (datetime.fromisoformat(self.birth).month, datetime.fromisoformat(self.birth).day))
+            - (
+                (today.month, today.day)
+                < (
+                    datetime.fromisoformat(self.birth).month,
+                    datetime.fromisoformat(self.birth).day,
+                )
+            )
         )
         normalized = (age - 10) / 90
         return torch.tensor([[normalized]], dtype=torch.float32)
@@ -41,11 +47,12 @@ class NormalizedUserSurveyResult(UserSurveyResult):
         """
         It should be perfectly concat with items above.
         """
+        maximum = max(torch.max(self.tags_).item(), torch.max(self.bio_).item())
         return torch.cat(
             [
-                self.age_,
-                self.gender_,
-                self.tags_,
-                self.bio_,
+                self.age_ * maximum,
+                self.gender_ / 4 * maximum,
+                self.tags_.T,
+                self.bio_.T
             ]
         )
