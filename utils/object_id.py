@@ -36,7 +36,6 @@ async def get_user(oid: str):
     user = await db.gensync.users.find_one({"_id": validate_object_id(oid)})
     if user:
         return user
-    print(user)
     return None
 
 

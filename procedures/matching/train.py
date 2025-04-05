@@ -8,7 +8,6 @@ from procedures.matching.parameters import (
     embed_dim,
     learning_rate,
     batch_size,
-    gamma,
 )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")

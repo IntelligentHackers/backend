@@ -19,10 +19,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://v4.gensync.site",
-        "https://v4-netlify.gensync.site",
-        "https://deploy-preview-64--gensync.netlify.app",
+        "*"
     ],
     allow_credentials=False,
     allow_methods=["*"],

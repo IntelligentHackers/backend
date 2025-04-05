@@ -5,7 +5,6 @@ from fastapi import HTTPException
 import jwt
 import json
 import datetime
-from typings.user import UserRole
 from database import db
 from bson import ObjectId
 from bcrypt import checkpw, gensalt, hashpw
@@ -42,7 +41,7 @@ def rsa_decrypt(ciphertext):
     return decrypt_text.decode("utf8")
 
 
-def jwt_encode(id: str, email: str, role: UserRole):
+def jwt_encode(id: str, email: str):
     duration = datetime.timedelta(days=30)
     payload = {
         "iss": "gensync",
@@ -50,7 +49,6 @@ def jwt_encode(id: str, email: str, role: UserRole):
         "iat": datetime.datetime.now(datetime.timezone.utc),
         "sub": id,
         "scope": "access_token",
-        "role": role,
         "mail": email,
         "jti": str(ObjectId()),
     }
@@ -79,14 +77,13 @@ async def validate_by_cert(email: str, cert: str):
     # in a minute
     if time < datetime.datetime.now().timestamp() - 60:
         raise HTTPException(status_code=401, detail="Login expired")
-    found = await db.gensync.users.find({"email": email}).to_list(None)
-    if len(found) == 0:
+    user = await db.gensync.auths.find_one({"email": email})
+    if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    user = found[0]
     if checkpw(
-        bytes(auth_field["password"], "utf-8"), bytes(user["password"], "utf-8")
+        bytes(auth_field["password"], "utf-8"), user["password_hash"]
     ):
-        return jwt_encode(str(found["_id"]), email, user["role"])
+        return jwt_encode(str(user["_id"]), email), str(user['_id'])
     else:
         raise HTTPException(status_code=403, detail="Password incorrect")
 
@@ -103,6 +100,6 @@ async def get_hashed_password_by_cert(cert: str):
 
 async def checkpwd(id: str, pwd: str):
     user = await db.gensync.auths.find_one({"_id": ObjectId(id)})
-    if checkpw(bytes(pwd, "utf-8"), bytes(user["password"], "utf-8")):
+    if checkpw(bytes(pwd, "utf-8"), user["password_hash"]):
         return True
     return False

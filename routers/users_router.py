@@ -6,7 +6,7 @@ from PIL import Image
 from bcrypt import hashpw, gensalt
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from utils.cert import validate_by_cert, rsa_decrypt
 from typings.auth import Auth
@@ -32,13 +32,15 @@ def validate_image(file: bytes) -> str:
 router = APIRouter()
 
 
-class CreateUser(BaseModel):
+class AuthUser(BaseModel):
     email: str
     credential: str
 
 
 @router.post("")
-async def create_user(user: CreateUser, ip=Depends(get_user_ip)):
+async def create_user(user: AuthUser, ip=Depends(get_user_ip)):
+    if await db.auths.find_one({'email': user.email}) is not None:
+        return RedirectResponse(url='/api/users/auth')
     auth_field = json.loads(rsa_decrypt(user.credential))
     time = auth_field["time"]
     # in a minute
@@ -56,14 +58,8 @@ async def create_user(user: CreateUser, ip=Depends(get_user_ip)):
         register_ip=ip
     )
     user_auth = auth.model_dump()
-    del user_auth["_id"]
     result = await db.auths.insert_one(user_auth)
-    return str(result.inserted_id)
-
-
-class AuthUser(BaseModel):
-    email: str
-    credential: str
+    return JSONResponse(status_code=201, content=str(result.inserted_id))
 
 
 @router.post("/auth")
@@ -71,12 +67,12 @@ async def auth_user(auth: AuthUser):
     email = auth.email
     credential = auth.credential
 
-    result = await validate_by_cert(email, credential)
+    result, user_id = await validate_by_cert(email, credential)
 
-    return {
+    return JSONResponse({
         "token": result,
-        "_id": id,
-    }
+        "_id": user_id,
+    })
 
 
 @router.post("/{user_id}/avatar")
