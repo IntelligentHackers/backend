@@ -10,6 +10,7 @@ class Auth(BaseModel):
     password_hash: bytes  # Only if password login
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
+    register_ip: str
     google_id: Optional[str] = None
     github_id: Optional[str] = None
     apple_id: Optional[str] = None

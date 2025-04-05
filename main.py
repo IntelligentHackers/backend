@@ -8,12 +8,11 @@ from routers import (
     selections_router,
 )
 from database import close_mongo_connection, connect_to_mongo
-import socketio
 from fastapi.middleware.cors import CORSMiddleware
 from database import db
+from sockets import socket
+import connections
 
-sio = socketio.AsyncServer(async_mode="asgi")
-socket = socketio.ASGIApp(sio)
 
 app = FastAPI()
 
@@ -25,23 +24,12 @@ app.add_middleware(
         "https://v4-netlify.gensync.site",
         "https://deploy-preview-64--gensync.netlify.app",
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.mount("/socket.io", socket)
-
-
-@sio.event
-async def connect(sid, environ):
-    print(f"connect {sid}")
-
-
-@sio.event
-async def disconnect(sid):
-    print(f"disconnect {sid}")
-
 
 async def mark_all_tasks_failed():
     await db.gensync.tasks.update_many(

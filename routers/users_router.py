@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from utils.cert import validate_by_cert, rsa_decrypt
 from typings.auth import Auth
 from database import db
+from utils.ip import get_user_ip
 from utils.object_id import validate_object_id, get_current_user
 
 MAX_FILE_SIZE = 1 * 1024 * 1024  # 1MB
@@ -37,7 +38,7 @@ class CreateUser(BaseModel):
 
 
 @router.post("")
-async def create_user(user: CreateUser):
+async def create_user(user: CreateUser, ip=Depends(get_user_ip)):
     auth_field = json.loads(rsa_decrypt(user.credential))
     time = auth_field["time"]
     # in a minute
@@ -52,6 +53,7 @@ async def create_user(user: CreateUser):
         password_hash=hashpw(auth_field["password"].encode("utf-8"), gensalt()),
         created_at=datetime.now(),
         updated_at=datetime.now(),
+        register_ip=ip
     )
     user_auth = auth.model_dump()
     del user_auth["_id"]
