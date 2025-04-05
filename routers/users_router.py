@@ -153,7 +153,7 @@ async def get_user_sessions(
     }
 
 
-@router.get("")
+@router.get("/recommend")
 async def recommend_user(
     user=Depends(get_current_user), page: int = 1, per_page: int = 1
 ):
